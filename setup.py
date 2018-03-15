@@ -12,9 +12,6 @@ setup(
     description="Fintu common data science library",
     url='https://gitlab.com/fintu/consulting/lib/fintulib.git',
     packages=[
-        'fintulib.wrangle',
-        'fintulib.common',
-        'fintulib.model',
         'fintulib'
     ], # find_packages does not work https://packaging.python.org/guides/packaging-namespace-packages/#native-namespace-packages
     package_dir={'': 'src'},

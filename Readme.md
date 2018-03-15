@@ -12,7 +12,15 @@ You could import the entire package by
 ```
 import fintulib
 ``` 
-or specific modules (make sure they are decleared in setup.py explicitly!) by, e.g. 
+or specific modules by, e.g. 
 ```
 from fintulib import wrangle
+```
+
+### In Jupyter / Ipython
+To autoreload onevery execution of a package's function, use
+```
+%load_ext autoreload
+%autoreload 1
+%aimport fintulib
 ```

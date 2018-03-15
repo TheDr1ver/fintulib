@@ -1,0 +1,22 @@
+**/.ipynb_checkpoints
+
+# we  don't need this?
+*.egg-info*
+
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+.cache/
+
+# Environments
+.env
+.venv
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# profiler output
+*.cprof

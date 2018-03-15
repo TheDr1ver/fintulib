@@ -76,12 +76,16 @@ class Mapping:
     def apply(self, df, col_name=None):
         """Apply the mapping to a dataframe.
         Note that if 'col_name' is not specified, the original col_name is used.
+
+        Doesn't mutate the original dataframe but returns a new dataframe.
         """
         return self._apply(self.map, df, col_name)
 
     def apply_inverse(self, df, col_name=None):
         """Apply the inverse mapping to a dataframe, restoring original content.
         Note that if 'col_name' is not specified, the original col_name is used.
+
+        Doesn't mutate the original dataframe but returns a new dataframe.
         """
         return self._apply(self.invmap, df, col_name)
 
@@ -107,8 +111,19 @@ def create_integer_mapping(dfs, col_name):
 
 def add_separate_value(df,col_name):
     """Add a truly separate value (high distance) to a numerical column 
+
+    Doesn't mutate the original dataframe but returns a new dataframe.
     """
     newval = df[col_name].max() + (df[col_name].max()-df[col_name].min()) + 1
     result = df.copy()
     result[col_name] = df[col_name].fillna(newval)
+    return result, newval
+
+def fillna_column(df,col_name,val):
+    """Replace all N/As in a given column with a given value.
+
+    Doesn't mutate the original dataframe but returns a new dataframe.
+    """
+    result = df.copy()
+    result[col_name] = result[col_name].fillna(val)
     return result

@@ -43,3 +43,15 @@ def cast_columns_date(df, col_date=[]):
     Modifies the passed dataframe in place.
     """
     df[col_date] = df[col_date].apply(pd.to_datetime)
+
+def extract_ymd(df, col_name):
+    """Extract year, month and date from column 'col_name'
+    and subsequently drops 'col_name'.
+
+    Doesn't mutate the original dataframe but returns a new dataframe.
+    """
+    df_res = df.copy()
+    df_res[col_name+"_year"] = df_res[col_name].dt.year
+    df_res[col_name+"_month"] = df_res[col_name].dt.month
+    df_res[col_name+"_day"] = df_res[col_name].dt.day
+    return df_res.drop(columns=[col_name])

@@ -59,6 +59,20 @@ def extract_ymd(df, col_name):
     return df_res.drop(columns=[col_name])
 
 
+def combine_ymd(df, col_name_date, col_name_year=None, col_name_month=None, col_name_day=None):
+    result = df.copy()
+    if (col_name_year == None):
+        col_name_year = col_name_date + "_year"
+    if (col_name_month == None):
+        col_name_month = col_name_date + "_month"
+    if (col_name_day == None):
+        col_name_day = col_name_date + "_day"
+
+    result[col_name_date] = pd.to_datetime(
+        df[col_name_year]*10000+df[col_name_month]*100+df[col_name_day], format='%Y%m%d')
+    return result
+
+
 class Mapping:
     """A mapping between categorical string variables and integer variables.
     """
@@ -109,7 +123,8 @@ def create_integer_mapping(dfs, col_name):
         categories = dfs[col_name].unique()
     return Mapping(col_name, categories)
 
-def add_separate_value(df,col_name):
+
+def add_separate_value(df, col_name):
     """Add a truly separate value (high distance) to a numerical column 
 
     Doesn't mutate the original dataframe but returns a new dataframe.
@@ -119,7 +134,8 @@ def add_separate_value(df,col_name):
     result[col_name] = df[col_name].fillna(newval)
     return result, newval
 
-def fillna_column(df,col_name,val):
+
+def fillna_column(df, col_name, val):
     """Replace all N/As in a given column with a given value.
 
     Doesn't mutate the original dataframe but returns a new dataframe.

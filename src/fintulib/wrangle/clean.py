@@ -1,3 +1,5 @@
+"""Some data cleansing helpers: categorical features, NaN values, datetime
+"""
 import pandas as pd
 from fintulib import common
 
@@ -6,9 +8,8 @@ def cast_columns_categorical(dfs, col_categorical=[]):
     """Convert columns to categorical, considering their levels across many dataframes.
     Dataframes passed to this function are modified in place.
 
-    Arguments:
-    dfs -- a list of pd.DataFrames
-    col_categorical -- a list of column names
+    :param dfs: a list of pd.DataFrames
+    :param col_categorical: a list of column names
     """
     for cat in col_categorical:
         # find all levels across dataframes
@@ -24,10 +25,10 @@ def fill_na(df, col_to_fill=[],
             strings_consider_na=['nan', 'NaN', 'NA', 'N/A']):
     """Fill NaN values in given non-numeric columns with given string value.
     Modifies the passed dataframe in place.
-    Arguments:
-    df -- DataFrame
-    col_to_fill -- list of column names to fill
-    strings_consider_na -- consider these strings to be nan and replace them as  well
+
+    :param df: DataFrame
+    :param col_to_fill: list of column names to fill
+    :param strings_consider_na: consider these strings to be nan and replace them as  well
     """
     for col in col_to_fill:
         if df[col].dtype.name == 'category':
@@ -42,6 +43,9 @@ def fill_na(df, col_to_fill=[],
 def cast_columns_date(df, col_date=[]):
     """Convert given column names to datetime
     Modifies the passed dataframe in place.
+
+    :param df: The Pandas DataFrame to apply the transformation to
+    :param col_date: The columns with date values
     """
     df[col_date] = df[col_date].apply(pd.to_datetime)
 
@@ -51,6 +55,9 @@ def extract_ymd(df, col_name):
     and subsequently drops 'col_name'.
 
     Doesn't mutate the original dataframe but returns a new dataframe.
+
+    :param df: The Pandas DataFrame to apply the transformation to
+    :param col_date: The column containing the date value -- must be of type datetime
     """
     df_res = df.copy()
     df_res[col_name+"_year"] = df_res[col_name].dt.year
@@ -60,6 +67,16 @@ def extract_ymd(df, col_name):
 
 
 def combine_ymd(df, col_name_date, col_name_year=None, col_name_month=None, col_name_day=None):
+    """Combine year, month and date columns to a single column.
+
+    Doesn't mutate the original dataframe but returns a new dataframe.
+
+    :param df: The Pandas DataFrame to apply the transformation to
+    :param col_name_date: The column name to use for the resulting date
+    :param col_name_year: The name of the column containing the year
+    :param col_name_month: The name of the column containing the month
+    :param col_name_day: The name of the column containing the day
+    """
     result = df.copy()
     if (col_name_year == None):
         col_name_year = col_name_date + "_year"
@@ -75,8 +92,9 @@ def combine_ymd(df, col_name_date, col_name_year=None, col_name_month=None, col_
 
 class Mapping:
     """A mapping between categorical string variables and integer variables.
+    (similar to sklearn LabelEncoder, but with some helper functions for
+    Pandas DataFrames)
     """
-
     def __init__(self, name, data):
         self.name = name
         mymap = {}

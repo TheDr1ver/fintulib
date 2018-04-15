@@ -1,0 +1,195 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>fintulib.cloud.gcs &#8212; fintulib 0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for fintulib.cloud.gcs</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;This module contains helpers to upload / download files and python objects to</span>
+<span class="sd">Google Cloud Storage.</span>
+
+<span class="sd">Python objects are serialized with pickle.</span>
+
+<span class="sd">Note that Python objects need to fit in memory if uploaded directly. Otherwise,</span>
+<span class="sd">a temporary local file is required.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">import</span> <span class="nn">io</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">from</span> <span class="nn">google.cloud</span> <span class="k">import</span> <span class="n">storage</span>
+<span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="k">import</span> <span class="n">urlparse</span>
+
+
+<span class="k">def</span> <span class="nf">_parse_gcs_path</span><span class="p">(</span><span class="n">gcs_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="n">parsed_path</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="n">gcs_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">parsed_path</span><span class="o">.</span><span class="n">scheme</span> <span class="o">==</span> <span class="s2">&quot;gs&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NameError</span><span class="p">(</span>
+            <span class="s2">&quot;gcs_path must be a valid Google Cloud Storage Path (begins with gs://)&quot;</span><span class="p">)</span>
+    <span class="n">bucket_name</span> <span class="o">=</span> <span class="n">parsed_path</span><span class="o">.</span><span class="n">netloc</span>
+    <span class="n">object_name</span> <span class="o">=</span> <span class="n">parsed_path</span><span class="o">.</span><span class="n">path</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="k">return</span> <span class="n">bucket_name</span><span class="p">,</span> <span class="n">object_name</span>
+
+
+<div class="viewcode-block" id="gcs_upload_object"><a class="viewcode-back" href="../../../index.html#fintulib.cloud.gcs.gcs_upload_object">[docs]</a><span class="k">def</span> <span class="nf">gcs_upload_object</span><span class="p">(</span><span class="n">python_object</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">gcs_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Upload a Python object to Google Cloud Storage (using pickle to serialize the object).</span>
+
+<span class="sd">    :param python_object: The Python object to upload (e.g. a Pandas DataFrame)</span>
+<span class="sd">    :param gcs_path: The Google Cloud Storage path. Must start with &#39;gs://&#39;</span>
+<span class="sd">    :param overwrite: Set this to &#39;True&#39; if you want to overwrite existing objects on GCS</span>
+<span class="sd">    :param verbose: Set this to &#39;False&#39; if you don&#39;t want this function to report success. Default is &#39;True&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">bucket_name</span><span class="p">,</span> <span class="n">object_name</span> <span class="o">=</span> <span class="n">_parse_gcs_path</span><span class="p">(</span><span class="n">gcs_path</span><span class="p">)</span>
+    <span class="n">storage_client</span> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><span class="n">Client</span><span class="p">()</span>
+    <span class="n">bucket</span> <span class="o">=</span> <span class="n">storage_client</span><span class="o">.</span><span class="n">bucket</span><span class="p">(</span><span class="n">bucket_name</span><span class="p">)</span>
+    <span class="n">blob</span> <span class="o">=</span> <span class="n">bucket</span><span class="o">.</span><span class="n">blob</span><span class="p">(</span><span class="n">object_name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">overwrite</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">FileExistsError</span><span class="p">(</span>
+            <span class="n">f</span><span class="s2">&quot;File gs://</span><span class="si">{bucket_name}</span><span class="s2">/</span><span class="si">{object_name}</span><span class="s2"> already exists. Specify &#39;overwrite=True&#39; if you want to overwrite.&quot;</span><span class="p">)</span>
+    <span class="n">pickle_bytes</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">python_object</span><span class="p">,</span> <span class="n">pickle</span><span class="o">.</span><span class="n">HIGHEST_PROTOCOL</span><span class="p">)</span>
+    <span class="n">stream</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">pickle_bytes</span><span class="p">)</span>
+    <span class="n">blob</span><span class="o">.</span><span class="n">upload_from_file</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
+    <span class="n">stream</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="n">f</span><span class="s2">&quot;Successfully uploaded object to gs://</span><span class="si">{bucket_name}</span><span class="s2">/</span><span class="si">{object_name}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="gcs_download_object"><a class="viewcode-back" href="../../../index.html#fintulib.cloud.gcs.gcs_download_object">[docs]</a><span class="k">def</span> <span class="nf">gcs_download_object</span><span class="p">(</span><span class="n">gcs_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Download a serialized Python object from Google Cloud Storage (using pickle to deserialize the object).</span>
+
+<span class="sd">    :param gcs_path: The Google Cloud Storage path. Must start with &#39;gs://&#39;</span>
+<span class="sd">    :param verbose: Set this to &#39;False&#39; if you don&#39;t want this function to report success. Default is &#39;True&#39;</span>
+
+<span class="sd">    :return: A Python object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">bucket_name</span><span class="p">,</span> <span class="n">object_name</span> <span class="o">=</span> <span class="n">_parse_gcs_path</span><span class="p">(</span><span class="n">gcs_path</span><span class="p">)</span>
+    <span class="n">storage_client</span> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><span class="n">Client</span><span class="p">()</span>
+    <span class="n">bucket</span> <span class="o">=</span> <span class="n">storage_client</span><span class="o">.</span><span class="n">bucket</span><span class="p">(</span><span class="n">bucket_name</span><span class="p">)</span>
+    <span class="n">blob</span> <span class="o">=</span> <span class="n">bucket</span><span class="o">.</span><span class="n">blob</span><span class="p">(</span><span class="n">object_name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">blob</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+            <span class="n">f</span><span class="s2">&quot;The file gs://</span><span class="si">{bucket_name}</span><span class="s2">/</span><span class="si">{object_name}</span><span class="s2"> doesn&#39;t exist&quot;</span><span class="p">)</span>
+    <span class="n">downstream</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span>
+    <span class="n">blob</span><span class="o">.</span><span class="n">download_to_file</span><span class="p">(</span><span class="n">downstream</span><span class="p">)</span>
+    <span class="n">downstream</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">down</span> <span class="o">=</span> <span class="n">downstream</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="n">f</span><span class="s2">&quot;Successfully downloaded object from gs://</span><span class="si">{bucket_name}</span><span class="s2">/</span><span class="si">{object_name}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">down</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="gcs_upload_file"><a class="viewcode-back" href="../../../index.html#fintulib.cloud.gcs.gcs_upload_file">[docs]</a><span class="k">def</span> <span class="nf">gcs_upload_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">gcs_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Upload a local file to Google Cloud Storage.</span>
+
+<span class="sd">    :param file_name: The local file name of the file to be uploaded</span>
+<span class="sd">    :param gcs_path: The Google Cloud Storage path. Must start with &#39;gs://&#39;</span>
+<span class="sd">    :param overwrite: Set this to &#39;True&#39; if you want to overwrite existing objects on GCS</span>
+<span class="sd">    :param verbose: Set this to &#39;False&#39; if you don&#39;t want this function to report success. Default is &#39;True&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">bucket_name</span><span class="p">,</span> <span class="n">object_name</span> <span class="o">=</span> <span class="n">_parse_gcs_path</span><span class="p">(</span><span class="n">gcs_path</span><span class="p">)</span>
+    <span class="n">storage_client</span> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><span class="n">Client</span><span class="p">()</span>
+    <span class="n">bucket</span> <span class="o">=</span> <span class="n">storage_client</span><span class="o">.</span><span class="n">bucket</span><span class="p">(</span><span class="n">bucket_name</span><span class="p">)</span>
+    <span class="n">blob</span> <span class="o">=</span> <span class="n">bucket</span><span class="o">.</span><span class="n">blob</span><span class="p">(</span><span class="n">object_name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">overwrite</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">FileExistsError</span><span class="p">(</span>
+            <span class="n">f</span><span class="s2">&quot;File gs://</span><span class="si">{bucket_name}</span><span class="s2">/</span><span class="si">{object_name}</span><span class="s2"> already exists. Specify &#39;overwrite=True&#39; if you want to overwrite.&quot;</span><span class="p">)</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;rb&quot;</span><span class="p">)</span>
+    <span class="n">blob</span><span class="o">.</span><span class="n">upload_from_file</span><span class="p">(</span><span class="n">f</span><span class="p">,)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Successfully uploaded file to gs://</span><span class="si">{bucket_name}</span><span class="s2">/</span><span class="si">{object_name}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="gcs_download_file"><a class="viewcode-back" href="../../../index.html#fintulib.cloud.gcs.gcs_download_file">[docs]</a><span class="k">def</span> <span class="nf">gcs_download_file</span><span class="p">(</span><span class="n">gcs_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Download a file from Google Cloud Storage.</span>
+
+<span class="sd">    :param gcs_path: The Google Cloud Storage path. Must start with &#39;gs://&#39;</span>
+<span class="sd">    :param file_name: The local file name where the downloaded file will be stored</span>
+<span class="sd">    :param verbose: Set this to &#39;False&#39; if you don&#39;t want this function to report success. Default is &#39;True&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">bucket_name</span><span class="p">,</span> <span class="n">object_name</span> <span class="o">=</span> <span class="n">_parse_gcs_path</span><span class="p">(</span><span class="n">gcs_path</span><span class="p">)</span>
+    <span class="n">storage_client</span> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><span class="n">Client</span><span class="p">()</span>
+    <span class="n">bucket</span> <span class="o">=</span> <span class="n">storage_client</span><span class="o">.</span><span class="n">bucket</span><span class="p">(</span><span class="n">bucket_name</span><span class="p">)</span>
+    <span class="n">blob</span> <span class="o">=</span> <span class="n">bucket</span><span class="o">.</span><span class="n">blob</span><span class="p">(</span><span class="n">object_name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">blob</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+            <span class="n">f</span><span class="s2">&quot;The file gs://</span><span class="si">{bucket_name}</span><span class="s2">/</span><span class="si">{object_name}</span><span class="s2"> doesn&#39;t exist&quot;</span><span class="p">)</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;wb&quot;</span><span class="p">)</span>
+    <span class="n">blob</span><span class="o">.</span><span class="n">download_to_file</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="n">f</span><span class="s2">&quot;Successfully downloaded file from gs://</span><span class="si">{bucket_name}</span><span class="s2">/</span><span class="si">{object_name}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Anselm Schultes, Philipp Bodewig.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

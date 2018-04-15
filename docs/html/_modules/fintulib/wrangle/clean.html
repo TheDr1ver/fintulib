@@ -1,0 +1,240 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>fintulib.wrangle.clean &#8212; fintulib 0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for fintulib.wrangle.clean</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Some data cleansing helpers: categorical features, NaN values, datetime</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">fintulib</span> <span class="k">import</span> <span class="n">common</span>
+
+
+<div class="viewcode-block" id="cast_columns_categorical"><a class="viewcode-back" href="../../../index.html#fintulib.wrangle.clean.cast_columns_categorical">[docs]</a><span class="k">def</span> <span class="nf">cast_columns_categorical</span><span class="p">(</span><span class="n">dfs</span><span class="p">,</span> <span class="n">col_categorical</span><span class="o">=</span><span class="p">[]):</span>
+    <span class="sd">&quot;&quot;&quot;Convert columns to categorical, considering their levels across many dataframes.</span>
+<span class="sd">    Dataframes passed to this function are modified in place.</span>
+
+<span class="sd">    :param dfs: a list of pd.DataFrames</span>
+<span class="sd">    :param col_categorical: a list of column names</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">cat</span> <span class="ow">in</span> <span class="n">col_categorical</span><span class="p">:</span>
+        <span class="c1"># find all levels across dataframes</span>
+        <span class="n">cat_levels</span> <span class="o">=</span> <span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">cat</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">for</span> <span class="n">df</span> <span class="ow">in</span> <span class="n">dfs</span> <span class="k">if</span> <span class="n">cat</span> <span class="ow">in</span> <span class="n">df</span><span class="p">]</span>
+        <span class="n">cat_levels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">common</span><span class="o">.</span><span class="n">lists</span><span class="o">.</span><span class="n">flatten_list</span><span class="p">(</span><span class="n">cat_levels</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">df</span> <span class="ow">in</span> <span class="n">dfs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">cat</span> <span class="ow">in</span> <span class="n">df</span><span class="p">:</span>
+                <span class="n">df</span><span class="p">[</span><span class="n">cat</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Categorical</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">cat</span><span class="p">],</span> <span class="n">categories</span><span class="o">=</span><span class="n">cat_levels</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="fill_na"><a class="viewcode-back" href="../../../index.html#fintulib.wrangle.clean.fill_na">[docs]</a><span class="k">def</span> <span class="nf">fill_na</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">col_to_fill</span><span class="o">=</span><span class="p">[],</span>
+            <span class="n">fill_value</span><span class="o">=</span><span class="s1">&#39;NA_FILL_STRING&#39;</span><span class="p">,</span>
+            <span class="n">strings_consider_na</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;nan&#39;</span><span class="p">,</span> <span class="s1">&#39;NaN&#39;</span><span class="p">,</span> <span class="s1">&#39;NA&#39;</span><span class="p">,</span> <span class="s1">&#39;N/A&#39;</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;Fill NaN values in given non-numeric columns with given string value.</span>
+<span class="sd">    Modifies the passed dataframe in place.</span>
+
+<span class="sd">    :param df: DataFrame</span>
+<span class="sd">    :param col_to_fill: list of column names to fill</span>
+<span class="sd">    :param strings_consider_na: consider these strings to be nan and replace them as  well</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">col_to_fill</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;category&#39;</span><span class="p">:</span>
+            <span class="c1"># need to add our NAN value as a categroy level before filling</span>
+            <span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">add_categories</span><span class="p">([</span><span class="n">fill_value</span><span class="p">])</span>
+            <span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">fill_value</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;object&#39;</span><span class="p">:</span>
+            <span class="c1"># non-numeric columns -- there must be a cleaner way to find string columns</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">strings_consider_na</span><span class="p">),</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">fill_value</span></div>
+
+
+<div class="viewcode-block" id="cast_columns_date"><a class="viewcode-back" href="../../../index.html#fintulib.wrangle.clean.cast_columns_date">[docs]</a><span class="k">def</span> <span class="nf">cast_columns_date</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">col_date</span><span class="o">=</span><span class="p">[]):</span>
+    <span class="sd">&quot;&quot;&quot;Convert given column names to datetime</span>
+<span class="sd">    Modifies the passed dataframe in place.</span>
+
+<span class="sd">    :param df: The Pandas DataFrame to apply the transformation to</span>
+<span class="sd">    :param col_date: The columns with date values</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">df</span><span class="p">[</span><span class="n">col_date</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">col_date</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="extract_ymd"><a class="viewcode-back" href="../../../index.html#fintulib.wrangle.clean.extract_ymd">[docs]</a><span class="k">def</span> <span class="nf">extract_ymd</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">col_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extract year, month and date from column &#39;col_name&#39;</span>
+<span class="sd">    and subsequently drops &#39;col_name&#39;.</span>
+
+<span class="sd">    Doesn&#39;t mutate the original dataframe but returns a new dataframe.</span>
+
+<span class="sd">    :param df: The Pandas DataFrame to apply the transformation to</span>
+<span class="sd">    :param col_date: The column containing the date value -- must be of type datetime</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">df_res</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">df_res</span><span class="p">[</span><span class="n">col_name</span><span class="o">+</span><span class="s2">&quot;_year&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_res</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">year</span>
+    <span class="n">df_res</span><span class="p">[</span><span class="n">col_name</span><span class="o">+</span><span class="s2">&quot;_month&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_res</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">month</span>
+    <span class="n">df_res</span><span class="p">[</span><span class="n">col_name</span><span class="o">+</span><span class="s2">&quot;_day&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_res</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">day</span>
+    <span class="k">return</span> <span class="n">df_res</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="n">col_name</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="combine_ymd"><a class="viewcode-back" href="../../../index.html#fintulib.wrangle.clean.combine_ymd">[docs]</a><span class="k">def</span> <span class="nf">combine_ymd</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">col_name_date</span><span class="p">,</span> <span class="n">col_name_year</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">col_name_month</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">col_name_day</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Combine year, month and date columns to a single column.</span>
+
+<span class="sd">    Doesn&#39;t mutate the original dataframe but returns a new dataframe.</span>
+
+<span class="sd">    :param df: The Pandas DataFrame to apply the transformation to</span>
+<span class="sd">    :param col_name_date: The column name to use for the resulting date</span>
+<span class="sd">    :param col_name_year: The name of the column containing the year</span>
+<span class="sd">    :param col_name_month: The name of the column containing the month</span>
+<span class="sd">    :param col_name_day: The name of the column containing the day</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">col_name_year</span> <span class="o">==</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">col_name_year</span> <span class="o">=</span> <span class="n">col_name_date</span> <span class="o">+</span> <span class="s2">&quot;_year&quot;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">col_name_month</span> <span class="o">==</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">col_name_month</span> <span class="o">=</span> <span class="n">col_name_date</span> <span class="o">+</span> <span class="s2">&quot;_month&quot;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">col_name_day</span> <span class="o">==</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">col_name_day</span> <span class="o">=</span> <span class="n">col_name_date</span> <span class="o">+</span> <span class="s2">&quot;_day&quot;</span>
+
+    <span class="n">result</span><span class="p">[</span><span class="n">col_name_date</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span>
+        <span class="n">df</span><span class="p">[</span><span class="n">col_name_year</span><span class="p">]</span><span class="o">*</span><span class="mi">10000</span><span class="o">+</span><span class="n">df</span><span class="p">[</span><span class="n">col_name_month</span><span class="p">]</span><span class="o">*</span><span class="mi">100</span><span class="o">+</span><span class="n">df</span><span class="p">[</span><span class="n">col_name_day</span><span class="p">],</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;%Y%m</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="Mapping"><a class="viewcode-back" href="../../../index.html#fintulib.wrangle.clean.Mapping">[docs]</a><span class="k">class</span> <span class="nc">Mapping</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;A mapping between categorical string variables and integer variables.</span>
+<span class="sd">    (similar to sklearn LabelEncoder, but with some helper functions for</span>
+<span class="sd">    Pandas DataFrames)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="n">mymap</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">cat</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">mymap</span><span class="p">[</span><span class="n">cat</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">map</span> <span class="o">=</span> <span class="n">mymap</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">invmap</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">mymap</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+<div class="viewcode-block" id="Mapping.apply"><a class="viewcode-back" href="../../../index.html#fintulib.wrangle.clean.Mapping.apply">[docs]</a>    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">col_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Apply the mapping to a dataframe.</span>
+<span class="sd">        Note that if &#39;col_name&#39; is not specified, the original col_name is used.</span>
+
+<span class="sd">        Doesn&#39;t mutate the original dataframe but returns a new dataframe.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">map</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">col_name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Mapping.apply_inverse"><a class="viewcode-back" href="../../../index.html#fintulib.wrangle.clean.Mapping.apply_inverse">[docs]</a>    <span class="k">def</span> <span class="nf">apply_inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">col_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Apply the inverse mapping to a dataframe, restoring original content.</span>
+<span class="sd">        Note that if &#39;col_name&#39; is not specified, the original col_name is used.</span>
+
+<span class="sd">        Doesn&#39;t mutate the original dataframe but returns a new dataframe.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">invmap</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">col_name</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mapping</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">col_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">col_name</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">col_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">result</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">mapping</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="create_integer_mapping"><a class="viewcode-back" href="../../../index.html#fintulib.wrangle.clean.create_integer_mapping">[docs]</a><span class="k">def</span> <span class="nf">create_integer_mapping</span><span class="p">(</span><span class="n">dfs</span><span class="p">,</span> <span class="n">col_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a mapping to integers for categorical string variables.</span>
+<span class="sd">    Works with one or more dataframes.</span>
+<span class="sd">    Returns the mapping and reverse mapping.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">dfs</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="n">categories_sets</span> <span class="o">=</span> <span class="p">[</span><span class="nb">set</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span> <span class="k">for</span> <span class="n">df</span> <span class="ow">in</span> <span class="n">dfs</span><span class="p">]</span>
+        <span class="n">categories</span> <span class="o">=</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="n">categories_sets</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">categories</span> <span class="o">=</span> <span class="n">dfs</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">Mapping</span><span class="p">(</span><span class="n">col_name</span><span class="p">,</span> <span class="n">categories</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="add_separate_value"><a class="viewcode-back" href="../../../index.html#fintulib.wrangle.clean.add_separate_value">[docs]</a><span class="k">def</span> <span class="nf">add_separate_value</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">col_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Add a truly separate value (high distance) to a numerical column </span>
+
+<span class="sd">    Doesn&#39;t mutate the original dataframe but returns a new dataframe.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">newval</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">-</span><span class="n">df</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">result</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">newval</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span><span class="p">,</span> <span class="n">newval</span></div>
+
+
+<div class="viewcode-block" id="fillna_column"><a class="viewcode-back" href="../../../index.html#fintulib.wrangle.clean.fillna_column">[docs]</a><span class="k">def</span> <span class="nf">fillna_column</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">col_name</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Replace all N/As in a given column with a given value.</span>
+
+<span class="sd">    Doesn&#39;t mutate the original dataframe but returns a new dataframe.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">result</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Anselm Schultes, Philipp Bodewig.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

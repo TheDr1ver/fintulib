@@ -1,5 +1,5 @@
 """This module contains helpers to upload / download files and python objects to
-Google Cloud Platform.
+Google Cloud Storage.
 
 Python objects are serialized with pickle.
 
@@ -27,11 +27,10 @@ def _parse_gcs_path(gcs_path: str) -> Tuple[str, str]:
 def gcs_upload_object(python_object: Any, gcs_path: str, overwrite: bool = False, verbose: bool = True) -> None:
     """Upload a Python object to Google Cloud Storage (using pickle to serialize the object).
 
-    Arguments:
-    python_object: The Python object to upload (e.g. a Pandas DataFrame)
-    gcs_path: The Google Cloud Storage path. Must start with 'gs://'
-    overwrite: Set this to 'True' if you want to overwrite existing objects on GCS
-    verbose: Set this to 'False' if you don't want this function to report success. Default is 'True'
+    :param python_object: The Python object to upload (e.g. a Pandas DataFrame)
+    :param gcs_path: The Google Cloud Storage path. Must start with 'gs://'
+    :param overwrite: Set this to 'True' if you want to overwrite existing objects on GCS
+    :param verbose: Set this to 'False' if you don't want this function to report success. Default is 'True'
     """
     bucket_name, object_name = _parse_gcs_path(gcs_path)
     storage_client = storage.Client()
@@ -53,12 +52,10 @@ def gcs_upload_object(python_object: Any, gcs_path: str, overwrite: bool = False
 def gcs_download_object(gcs_path: str, verbose: bool = True) -> Any:
     """Download a serialized Python object from Google Cloud Storage (using pickle to deserialize the object).
 
-    Arguments:
-    gcs_path: The Google Cloud Storage path. Must start with 'gs://'
-    verbose: Set this to 'False' if you don't want this function to report success. Default is 'True'
+    :param gcs_path: The Google Cloud Storage path. Must start with 'gs://'
+    :param verbose: Set this to 'False' if you don't want this function to report success. Default is 'True'
 
-    Returns:
-    A Python object
+    :return: A Python object
     """
     bucket_name, object_name = _parse_gcs_path(gcs_path)
     storage_client = storage.Client()
@@ -80,11 +77,10 @@ def gcs_download_object(gcs_path: str, verbose: bool = True) -> Any:
 def gcs_upload_file(file_name: str, gcs_path: str, overwrite: bool = False, verbose: bool=True) -> None:
     """Upload a local file to Google Cloud Storage.
 
-    Arguments:
-    file_name: The local file name of the file to be uploaded
-    gcs_path: The Google Cloud Storage path. Must start with 'gs://'
-    overwrite: Set this to 'True' if you want to overwrite existing objects on GCS
-    verbose: Set this to 'False' if you don't want this function to report success. Default is 'True'
+    :param file_name: The local file name of the file to be uploaded
+    :param gcs_path: The Google Cloud Storage path. Must start with 'gs://'
+    :param overwrite: Set this to 'True' if you want to overwrite existing objects on GCS
+    :param verbose: Set this to 'False' if you don't want this function to report success. Default is 'True'
     """
     bucket_name, object_name = _parse_gcs_path(gcs_path)
     storage_client = storage.Client()
@@ -103,10 +99,9 @@ def gcs_upload_file(file_name: str, gcs_path: str, overwrite: bool = False, verb
 def gcs_download_file(gcs_path: str, file_name: str, verbose: bool=True) -> None:
     """Download a file from Google Cloud Storage.
 
-    Arguments:
-    gcs_path: The Google Cloud Storage path. Must start with 'gs://'
-    file_name: The local file name where the downloaded file will be stored
-    verbose: Set this to 'False' if you don't want this function to report success. Default is 'True'
+    :param gcs_path: The Google Cloud Storage path. Must start with 'gs://'
+    :param file_name: The local file name where the downloaded file will be stored
+    :param verbose: Set this to 'False' if you don't want this function to report success. Default is 'True'
     """
     bucket_name, object_name = _parse_gcs_path(gcs_path)
     storage_client = storage.Client()

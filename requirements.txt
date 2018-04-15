@@ -2,7 +2,7 @@
 # https://github.com/Damnever/pigar
 
 # src/fintulib/cloud/gcs.py: 13
-google == 2.0.1
+google-cloud-storage
 
 # src/fintulib/model/metrics.py: 1
 numpy == 1.14.2

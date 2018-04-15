@@ -1,8 +1,9 @@
 **/.ipynb_checkpoints
 
-# we  don't need this?
 *.egg-info*
 
+# Editor cache and config
+.vscode
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

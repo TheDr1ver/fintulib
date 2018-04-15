@@ -1,3 +1,12 @@
+"""This module contains helpers to upload / download files and python objects to
+Google Cloud Platform.
+
+Python objects are serialized with pickle.
+
+Note that Python objects need to fit in memory if uploaded directly. Otherwise,
+a temporary local file is required.
+"""
+
 from typing import Any, Tuple
 import io
 import pickle

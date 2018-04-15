@@ -1,5 +1,7 @@
 # Fintu common data science library
 
+This library contains some useful code snippets for data wrangling and analysis.
+
 ## Install
 Check out this library, then in it's root directory use  
 ```
@@ -24,3 +26,7 @@ To autoreload onevery execution of a package's function, use
 %autoreload 1
 %aimport fintulib
 ```
+
+## License
+
+This package is licensed under MIT license.

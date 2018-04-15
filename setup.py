@@ -1,6 +1,4 @@
-"""Common data science functionality 
-
-
+"""A collection of useful code snippets for data wrangling and analysis
 """
 from setuptools import setup, find_packages
 
@@ -10,16 +8,9 @@ setup(
     version='0.0.1',
     author="Anselm Schultes, Philipp Bodewig. (C) 2018 Fintu Data Science GmbH.",
     description="Fintu common data science library",
-    url='https://gitlab.com/fintu/consulting/lib/fintulib.git',
+    url='https://github.com/Fintu/fintulib',
     packages=[
         'fintulib'
-    ], # find_packages does not work https://packaging.python.org/guides/packaging-namespace-packages/#native-namespace-packages
-    package_dir={'': 'src'},
-    # do not use install_requires for now, as it interacts with requirements.txt
-    # install_requires=[
-    #     'numpy',
-    #     'scipy',
-    #     'nltk',
-    #     'pandas'
-    # ]
+    ], 
+    package_dir={'': 'src'}
 )

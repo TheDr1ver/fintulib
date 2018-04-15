@@ -8,7 +8,7 @@ def cast_columns_categorical(dfs, col_categorical=[]):
 
     Arguments:
     dfs -- a list of pd.DataFrames
-    col_categorical -- a list of colum names
+    col_categorical -- a list of column names
     """
     for cat in col_categorical:
         # find all levels across dataframes

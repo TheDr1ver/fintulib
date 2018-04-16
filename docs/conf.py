@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.abspath('../src'))
 # -- Project information -----------------------------------------------------
 
 project = 'fintulib'
-copyright = '2018, Anselm Schultes, Philipp Bodewig'
+copyright = '2018, Fintu Data Science GmbH'
 author = 'Anselm Schultes, Philipp Bodewig'
 
 # The short X.Y version

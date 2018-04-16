@@ -5,14 +5,14 @@ Note that most of the models require **Python 3**. Don't use this with **Python 
 
 ## Install
 
-### Clone repository yourself
+### Local install
 Check out this library, then in it's root directory use  
 ```
 pip install -e .
 ```
 to install in your python environment.
 
-### Using pip directly from github
+### Install latest version from Github using pip
 You can install directly from github using pip:
 ```
 pip install git+https://github.com/Fintu/fintulib
@@ -28,7 +28,9 @@ or specific modules by, e.g.
 from fintulib import wrangle
 ```
 
-### In Jupyter / Ipython
+Documentation of the modules can be found at http://fintulib.readthedocs.io/en/latest/.
+
+### Autoreload in Jupyter / Ipython (local install only)
 To autoreload onevery execution of a package's function, use
 ```
 %load_ext autoreload

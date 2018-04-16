@@ -18,6 +18,14 @@ You can install directly from github using pip:
 pip install git+https://github.com/Fintu/fintulib
 ```
 
+### Building the docs
+You might not want to build the docs locally, as they are available [online](http://fintulib.readthedocs.io/en/latest/), but if you do:
+```
+cd docs/
+make html
+```
+
+
 ## Use  
 You could import the entire package by 
 ```

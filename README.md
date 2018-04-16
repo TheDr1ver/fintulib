@@ -1,7 +1,7 @@
 # Fintu common data science library
 This library contains some useful code snippets for data wrangling and analysis.
 
-Note that most of the models require **Python 3**. Don't use this with **Python 2**.
+Note that most of the modules require **Python 3.6**.
 
 ## Install
 

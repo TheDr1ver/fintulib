@@ -2,15 +2,13 @@
 """
 from setuptools import setup, find_packages
 
-# trick: create requirements.txt with "-e ." in it -> installs from install_requires
 setup(
     name='fintulib',
     version='0.0.1',
     author="Anselm Schultes, Philipp Bodewig. (C) 2018 Fintu Data Science GmbH.",
     description="Fintu common data science library",
     url='https://github.com/Fintu/fintulib',
-    packages=[
-        'fintulib'
-    ], 
-    package_dir={'': 'src'}
+    packages=find_packages(exclude=['contrib', 'docs', 'tests', '__pycache__']),
+    include_package_data=True,
+
 )

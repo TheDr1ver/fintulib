@@ -52,6 +52,11 @@ Miscellaneous helpers for data wrangling.
 .. automodule:: fintulib.wrangle.inspect
    :members:
 
+``fintulib.wrangle.FuzzyMatcher``
+----------------------------
+.. automodule:: fintulib.wrangle.FuzzyMatcher
+   :members:
+
 Indices and tables
 ==================
 

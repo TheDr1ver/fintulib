@@ -10,5 +10,14 @@ setup(
     url='https://github.com/Fintu/fintulib',
     packages=find_packages(exclude=['contrib', 'docs', 'tests', '__pycache__']),
     include_package_data=True,
-
+    install_requires=[
+        "google-cloud-storage == 1.8.0",
+        "dill == 0.2.7.1",
+        "numpy == 1.14.2",
+        "pandas == 0.22.0",
+        "protobuf == 3.0.0",
+        "scikit_learn == 0.19.1",
+        "scipy == 1.1.0",
+        "setuptools == 39.0.1"
+    ]
 )

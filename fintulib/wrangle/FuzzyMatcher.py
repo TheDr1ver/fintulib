@@ -6,17 +6,16 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from scipy.sparse import csr_matrix
 from scipy.sparse import rand
 
-try:
-    import sparse_dot_topn.sparse_dot_topn as ct
-except ModuleNotFoundError:
-    print("This module requires the sparse_dot_topn library \
-    accelerated sparse matrix multiplication,which can be found \
-    at https://github.com/ing-bank/sparse_dot_topn.")
-    import sys
-    sys.exit(1)
-
 
 def cossim_top(A, B, ntop, lower_bound=0):
+    try:
+        import sparse_dot_topn.sparse_dot_topn as ct
+    except ModuleNotFoundError:
+        print("This module requires the sparse_dot_topn library \
+        accelerated sparse matrix multiplication,which can be found \
+        at https://github.com/ing-bank/sparse_dot_topn.")
+        import sys
+        sys.exit(1)
     B = B.tocsr()
 
     M, _ = A.shape

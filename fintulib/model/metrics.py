@@ -2,7 +2,7 @@
 """
 import pandas as pd
 import numpy as np
-from statsmodels.stats.contingency_tables import Table, mcnemar
+from statsmodels.stats.contingency_tables import SquareTable, mcnemar
 
 # from  https://www.kaggle.com/dimitrislev/xgboost-in-python-with-rmspe
 
@@ -23,7 +23,7 @@ def RMSPE(y, yhat):
 
 def _mcnemar_p_value_cols(df, col1, col2):
     """Calculate McNemar's test on two columns of a data frame"""
-    table = Table.from_data(df[[col1, col2]])
+    table = SquareTable.from_data(df[[col1, col2]])
     result = mcnemar(table.table)
     return result.pvalue
 

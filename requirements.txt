@@ -6,10 +6,13 @@ google-cloud-storage >= 1.8.0
 # fintulib/wrangle/FuzzyMatcher.py: 3
 dill >= 0.2.7.1
 
-# fintulib/model/metrics.py: 3
+# fintulib/common/pandas.py: 4
+# fintulib/model/metrics.py: 4
 # fintulib/wrangle/FuzzyMatcher.py: 2
-numpy >= 1.14.2
+numpy >= 1.14.3
 
+# fintulib/common/pandas.py: 3
+# fintulib/model/metrics.py: 3
 # fintulib/wrangle/FuzzyMatcher.py: 1
 # fintulib/wrangle/clean.py: 3
 pandas >= 0.22.0
@@ -24,7 +27,10 @@ scikit_learn >= 0.19.1
 scipy >= 1.1.0
 
 # setup.py: 3
-setuptools >= 39.0.1
+setuptools >= 36.2.7
 
-# fintulib/model/metrics.py
+# fintulib/model/metrics.py: 5
 statsmodels >= 0.8.0
+
+# fintulib/common/pandas.py: 5
+tqdm >= 4.23.3

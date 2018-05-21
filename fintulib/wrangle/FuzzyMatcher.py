@@ -211,6 +211,16 @@ class FuzzyMatcher:
         lookups.append(lookup)
         results.append(result)
 
+        # cossim_top only returns indices for which the matching has found a result --
+        # we manually add failed lookups so the output matches the input
+        failed_lookup_indices = [item for item in range(len(left_strings)) if item not in lookup_indices]
+        failed_lookups = [left_strings[i] for i in failed_lookup_indices]
+        failed_results = [[] for i in failed_lookup_indices]
+
+        lookup_indices = lookup_indices + failed_lookup_indices
+        lookups = lookups + failed_lookups
+        results = results + failed_results
+
         return pd.DataFrame({
             'lookup': lookups,
-            'results': results}, index=lookup_indices)
+            'results': results}, index=lookup_indices).sort_index()

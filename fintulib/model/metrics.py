@@ -32,8 +32,7 @@ def mcnemar_p_value(df, sort_columns=True):
     """Calculate McNemar's test on subsequent columns of a data frame.
     
     :param df: The data frame to use.
-    :param sort_columns: If true, columns will be sorted by their name
-    before calculating McNemar's test scores.
+    :param sort_columns: If true, columns will be sorted by their name before calculating McNemar's test scores.
     """
     if sort_columns:
         cols = list(df.columns.sort_values())

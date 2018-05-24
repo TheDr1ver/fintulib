@@ -48,12 +48,13 @@ class FuzzyMatcher:
     This class uses the accelerated sparse matrix multiplication library from \
     https://github.com/ing-bank/sparse_dot_topn and cython - please install before use."""
 
-    def __init__(self, n_grams=3):
+    def __init__(self, n_grams=3, verbose=True):
         """Create a new fuzzy matcher.
 
-        :param n_grams: The number of characters to be used in n-grams.
-        See https://en.wikipedia.org/wiki/N-gram for more details.
+        :param n_grams: The number of characters to be used in n-grams. See https://en.wikipedia.org/wiki/N-gram for more details.
+        :param verbose: If true, the fuzzy matcher prints information messages during execution.
         """
+        self.verbose = verbose
         def ngrams_extractor(string):
             string = re.sub(r'[,-./]|\sBD', r'', string)
             ngrams = zip(*[string[i:] for i in range(n_grams)])
@@ -107,7 +108,8 @@ class FuzzyMatcher:
         """
         lc_corpus = self._to_lowercase(corpus)
         if self.is_fitted == False:
-            print("Fitting vectorizer to corpus...")
+            if self.verbose:
+                print("Fitting vectorizer to corpus...")
             corpus_vect = self.vectorizer.fit_transform(lc_corpus).transpose()
         else:
             corpus_vect = self.vectorizer.transform(lc_corpus).transpose()
@@ -174,8 +176,12 @@ class FuzzyMatcher:
         return [s.lower() for s in strings]
 
     def _match_feature_matrices(self, left_strings, right_strings, left_vect, right_vect, top_n, threshold):
-        print("Calculating cosine similarities...this might take a while...")
+        if self.verbose:
+            print("Calculating cosine similarities...this might take a while...")
         c = cossim_top(left_vect, right_vect, top_n, threshold)
+
+        if self.verbose:
+            print("Formatting results...")
 
         non_zeros = c.nonzero()
 

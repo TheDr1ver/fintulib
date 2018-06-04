@@ -4,21 +4,26 @@ import pandas as pd
 import numpy as np
 from statsmodels.stats.contingency_tables import SquareTable, mcnemar
 
-# from  https://www.kaggle.com/dimitrislev/xgboost-in-python-with-rmspe
-
-
 def _rmspe_weights(y):
     w = np.zeros(y.shape, dtype=float)
     ind = y != 0
     w[ind] = 1./(y[ind]**2)
     return w
 
-
+# from  https://www.kaggle.com/dimitrislev/xgboost-in-python-with-rmspe
 def RMSPE(y, yhat):
     """Root mean squared percentage error"""
     w = _rmspe_weights(y)
     rmspe = np.sqrt(np.mean(w * (y - yhat)**2))
     return rmspe
+
+def MAPE(y,y_hat):
+    """Mean Absolute Percentage Error"""
+    return np.mean(abs((y - y_hat)/y))
+
+def MeAPE(y,y_hat):
+    """Median Absolute Percentage Error"""
+    return np.median(abs((y - y_hat)/y))
 
 
 def _mcnemar_p_value_cols(df, col1, col2):
